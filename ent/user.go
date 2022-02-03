@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"entgo.io/bug/ent/user"
+	"entgo.io/bug/sid"
 	"entgo.io/ent/dialect/sql"
 )
 
@@ -14,7 +15,7 @@ import (
 type User struct {
 	config `json:"-"`
 	// ID of the ent.
-	ID int `json:"id,omitempty"`
+	ID sid.ID `json:"id,omitempty"`
 	// Age holds the value of the "age" field.
 	Age int `json:"age,omitempty"`
 	// Name holds the value of the "name" field.
@@ -26,7 +27,9 @@ func (*User) scanValues(columns []string) ([]interface{}, error) {
 	values := make([]interface{}, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldID, user.FieldAge:
+		case user.FieldID:
+			values[i] = new(sid.ID)
+		case user.FieldAge:
 			values[i] = new(sql.NullInt64)
 		case user.FieldName:
 			values[i] = new(sql.NullString)
@@ -50,7 +53,7 @@ func (u *User) assignValues(columns []string, values []interface{}) error {
 			if !ok {
 				return fmt.Errorf("unexpected type %T for field id", value)
 			}
-			u.ID = int(value.Int64)
+			u.ID = sid.ID(value.Int64)
 		case user.FieldAge:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
 				return fmt.Errorf("unexpected type %T for field age", values[i])

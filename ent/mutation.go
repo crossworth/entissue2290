@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/bug/ent/predicate"
 	"entgo.io/bug/ent/user"
+	"entgo.io/bug/sid"
 
 	"entgo.io/ent"
 )
@@ -31,7 +32,7 @@ type UserMutation struct {
 	config
 	op            Op
 	typ           string
-	id            *int
+	id            *sid.ID
 	age           *int
 	addage        *int
 	name          *string
@@ -61,7 +62,7 @@ func newUserMutation(c config, op Op, opts ...userOption) *UserMutation {
 }
 
 // withUserID sets the ID field of the mutation.
-func withUserID(id int) userOption {
+func withUserID(id sid.ID) userOption {
 	return func(m *UserMutation) {
 		var (
 			err   error
@@ -111,9 +112,15 @@ func (m UserMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of User entities.
+func (m *UserMutation) SetID(id sid.ID) {
+	m.id = &id
+}
+
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *UserMutation) ID() (id int, exists bool) {
+func (m *UserMutation) ID() (id sid.ID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -124,12 +131,12 @@ func (m *UserMutation) ID() (id int, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *UserMutation) IDs(ctx context.Context) ([]int, error) {
+func (m *UserMutation) IDs(ctx context.Context) ([]sid.ID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
 		if exists {
-			return []int{id}, nil
+			return []sid.ID{id}, nil
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
